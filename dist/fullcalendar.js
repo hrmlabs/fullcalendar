@@ -7062,45 +7062,44 @@ var DayGrid = /** @class */ (function (_super) {
                 col++;
             }
         };
-        if (levelLimit && levelLimit-1 < rowStruct.segLevels.length) {
-            levelSegs = rowStruct.segLevels[levelLimit-1];
-            cellMatrix = rowStruct.cellMatrix;
-            limitedNodes = rowStruct.tbodyEl.children().slice(levelLimit) // get level <tr> elements past the limit
-                .addClass('fc-limited').get(); // hide elements and get a simple DOM-nodes array
-            // iterate though segments in the last allowable level
-            for (i = 0; i < levelSegs.length; i++) {
-                seg = levelSegs[i];
-                emptyCellsUntil(seg.leftCol); // process empty cells before the segment
-                // determine *all* segments below `seg` that occupy the same columns
-                colSegsBelow = [];
-                totalSegsBelow = 0;
-                while (col <= seg.rightCol) {
-                    segsBelow = this.getCellSegs(row, col, levelLimit-1);
-                    colSegsBelow.push(segsBelow);
-                    totalSegsBelow += segsBelow.length;
-                    col++;
-                }
-                if (totalSegsBelow > 0) {
-                    td = cellMatrix[levelLimit - 1][seg.leftCol]; // the segment's parent cell
-                    rowspan = td.attr('rowspan') || 1;
-                    segMoreNodes = [];
-                    // make a replacement <td> for each column the segment occupies. will be one for each colspan
-										for (j = 0; j < colSegsBelow.length; j++) {
-											moreTd = $('<td class="fc-more-cell"/>').attr('rowspan', rowspan);
-											segsBelow = colSegsBelow[j];
-											var numData = 0;
-											for (var k = 0; k < totalSegsBelow; k++) {
-												if (segsBelow[k]) {
-													var numText = segsBelow[k].el[0].text;
-													var splitNumText = numText.split(" ");
-													var getNum = splitNumText[3];
-
-													if (!isNaN(getNum)) {
-														numData += parseInt(getNum);
-													}
-												}
-				              }
-				              numData -= 5;
+				if (levelLimit && levelLimit-1 < rowStruct.segLevels.length) {
+          levelSegs = rowStruct.segLevels[levelLimit-1];
+          cellMatrix = rowStruct.cellMatrix;
+          limitedNodes = rowStruct.tbodyEl.children().slice(levelLimit) // get level <tr> elements past the limit
+              .addClass('fc-limited').get(); // hide elements and get a simple DOM-nodes array
+          // iterate though segments in the last allowable level
+          for (i = 0; i < levelSegs.length; i++) {
+              seg = levelSegs[i];
+              emptyCellsUntil(seg.leftCol); // process empty cells before the segment
+              // determine *all* segments below `seg` that occupy the same columns
+              colSegsBelow = [];
+              totalSegsBelow = 0;
+              while (col <= seg.rightCol) {
+                  segsBelow = this.getCellSegs(row, col, levelLimit-1);
+                  colSegsBelow.push(segsBelow);
+                  totalSegsBelow += segsBelow.length;
+                  col++;
+              }
+              if (totalSegsBelow > 0) { // do we need to replace this segment with one or many "more" links?
+                  td = cellMatrix[levelLimit - 1][seg.leftCol]; // the segment's parent cell
+                  rowspan = td.attr('rowspan') || 1;
+                  segMoreNodes = [];
+                  // make a replacement <td> for each column the segment occupies. will be one for each colspan
+                  for (j = 0; j < colSegsBelow.length; j++) {
+                      moreTd = $('<td class="fc-more-cell"/>').attr('rowspan', rowspan);
+                      segsBelow = colSegsBelow[j];
+                      var numData = 0;
+                      for (var k = 0; k < totalSegsBelow; k++) {
+                          if (segsBelow[k]) {
+                              var numText = segsBelow[k].el[0].text;
+                              var splitNumText = numText.split(" ");
+                              var getNum = splitNumText[3];
+                              if (!isNaN(getNum)) {
+                                  numData += parseInt(getNum);
+                              }
+                          }
+        }
+        numData -= 5;
 
                       if (numData > 0) {
                           moreLink = this.renderMoreLink(row, seg.leftCol + j, [seg].concat(segsBelow), numData // count seg as hidden too
@@ -7110,15 +7109,15 @@ var DayGrid = /** @class */ (function (_super) {
                           segMoreNodes.push(moreTd[0]);
                           moreNodes.push(moreTd[0]);
                       }
-										}
-                    td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
-                    limitedNodes.push(td[0]);
-                }
-            }
-            emptyCellsUntil(this.colCnt); // finish off the level
-            rowStruct.moreEls = $(moreNodes); // for easy undoing later
-            rowStruct.limitedEls = $(limitedNodes); // for easy undoing later
-        }
+                  }
+                  td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
+                  limitedNodes.push(td[0]);
+              }
+          }
+          emptyCellsUntil(this.colCnt); // finish off the level
+          rowStruct.moreEls = $(moreNodes); // for easy undoing later
+          rowStruct.limitedEls = $(limitedNodes); // for easy undoing later
+      }
     };
     // Reveals all levels and removes all "more"-related elements for a grid's row.
     // `row` is a row number.
