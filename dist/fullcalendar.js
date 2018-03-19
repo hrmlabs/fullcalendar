@@ -7098,8 +7098,8 @@ var DayGrid = /** @class */ (function (_super) {
                                   numData += parseInt(getNum);
                               }
                           }
-        }
-        numData -= 5;
+			}
+			numData -= 5;
 
                       if (numData > 0) {
                           moreLink = this.renderMoreLink(row, seg.leftCol + j, [seg].concat(segsBelow), numData // count seg as hidden too
@@ -7108,10 +7108,10 @@ var DayGrid = /** @class */ (function (_super) {
                           moreTd.append(moreWrap);
                           segMoreNodes.push(moreTd[0]);
                           moreNodes.push(moreTd[0]);
+			  td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
+			  limitedNodes.push(td[0]);
                       }
                   }
-                  td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
-                  limitedNodes.push(td[0]);
               }
           }
           emptyCellsUntil(this.colCnt); // finish off the level
