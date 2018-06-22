@@ -6276,6 +6276,7 @@ var DayTableMixin = /** @class */ (function (_super) {
         else {
             classNames.push('fc-' + util_1.dayIDs[date.day()]); // only add the day-of-week class
         }
+        
         return '' +
             '<th class="' + classNames.join(' ') + '"' +
             ((isDateValid && t.rowCnt) === 1 ?
@@ -7062,24 +7063,49 @@ var DayGrid = /** @class */ (function (_super) {
                 col++;
             }
         };
-				if (levelLimit && levelLimit-1 < rowStruct.segLevels.length) {
+				if (levelLimit && levelLimit-1 < rowStruct.segLevels.length) {          
           levelSegs = rowStruct.segLevels[levelLimit-1];
+          // console.log(levelSegs)
           cellMatrix = rowStruct.cellMatrix;
+          allsegs = 0;
           limitedNodes = rowStruct.tbodyEl.children().slice(levelLimit) // get level <tr> elements past the limit
               .addClass('fc-limited').get(); // hide elements and get a simple DOM-nodes array
           // iterate though segments in the last allowable level
+          // console.log(levelSegs.length)
           for (i = 0; i < levelSegs.length; i++) {
               seg = levelSegs[i];
               emptyCellsUntil(seg.leftCol); // process empty cells before the segment
               // determine *all* segments below `seg` that occupy the same columns
-              colSegsBelow = [];
-              totalSegsBelow = 0;
+              let colSegsBelow = [],
+                totalSegsBelow = 0,
+                colPosition = '',
+                countLoop = 1;
+              
+              
+                colPosition = col;
               while (col <= seg.rightCol) {
-                  segsBelow = this.getCellSegs(row, col, levelLimit-1);
-                  colSegsBelow.push(segsBelow);
-                  totalSegsBelow += segsBelow.length;
-                  col++;
-              }
+                if (countLoop == 1){
+                  allsegs = this.getCellSegs(row, col);
+                  colPosition = col;
+                }   
+                segsBelow = this.getCellSegs(row, col, levelLimit-1);
+                colSegsBelow.push(segsBelow);
+                totalSegsBelow += segsBelow.length;
+                col++;
+                countLoop++;
+              } 
+              // console.log(allsegs)            
+              eventSegs = [];
+              totalLongSegs = 0;
+              allsegs.forEach((seg)=>{
+                 if (seg.el[0].className.indexOf("hidden") < 0){
+                  // eventSegs.push(seg);
+                  // if (seg.leftCol  < colPosition && seg.level < levelLimit){
+                  if (seg.leftCol  < colPosition){                  
+                    totalLongSegs += 1;
+                  }
+                 }         
+              });
               if (totalSegsBelow > 0) { // do we need to replace this segment with one or many "more" links?
                   td = cellMatrix[levelLimit - 1][seg.leftCol]; // the segment's parent cell
                   rowspan = td.attr('rowspan') || 1;
@@ -7088,28 +7114,71 @@ var DayGrid = /** @class */ (function (_super) {
                   for (j = 0; j < colSegsBelow.length; j++) {
                       moreTd = $('<td class="fc-more-cell"/>').attr('rowspan', rowspan);
                       segsBelow = colSegsBelow[j];
-                      var numData = 0;
+                      let numData = 0,
+                        num = 0,
+                        counter = 0;
                       for (var k = 0; k < totalSegsBelow; k++) {
-                          if (segsBelow[k]) {
+                          if (segsBelow[k] && segsBelow[k].el[0].className.indexOf("hidden") > 0) {
                               var numText = segsBelow[k].el[0].text;
-                              var splitNumText = numText.split(" ");
-                              var getNum = splitNumText[3];
-                              if (!isNaN(getNum)) {
-                                  numData += parseInt(getNum);
+                              var splitNumText = numText.split(" ");                              
+                              var getNum = splitNumText[3];                              
+                              if (getNum && !isNaN(getNum)) {                                
+                                  num += parseInt(getNum); 
+                                  counter ++;                                 
                               }
                           }
-			}
-			numData -= 5;
-
+                      }
+                      numData = (num + totalLongSegs) - 5;
                       if (numData > 0) {
-                          moreLink = this.renderMoreLink(row, seg.leftCol + j, [seg].concat(segsBelow), numData // count seg as hidden too
+                        // console.log(colPosition)
+                          let count = 0;
+                          count = numData;
+                          moreLink = this.renderMoreLink(row, seg.leftCol + j, [seg].concat(segsBelow), count // count seg as hidden too
                           );
                           moreWrap = $('<div/>').append(moreLink);
                           moreTd.append(moreWrap);
                           segMoreNodes.push(moreTd[0]);
                           moreNodes.push(moreTd[0]);
-			  td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
-			  limitedNodes.push(td[0]);
+                          td.addClass('fc-limited').after($(segMoreNodes)); // hide original <td> and inject replacements
+                          limitedNodes.push(td[0]);
+                      }else{ 
+                      //   allsegs = this.getCellSegs(row, colPosition);
+                      //   console.log(allsegs)
+                      //   allsegs.forEach((seg)=>{
+                      //     console.log("hae")
+                      //     if (seg.el[0].className.indexOf("hidden") < 0){
+                      //       console.log(seg.leftCol, colPosition)
+                      //      // if (seg.leftCol  < colPosition && seg.level < levelLimit){
+                      //      if (seg.leftCol  < colPosition){                                         
+                      //        totalLongSegs += 1;
+                      //      }
+                      //     }         
+                      //  });
+                        // console.log(colPosition)
+                        let count = 0;
+                        count = (totalLongSegs + num) - 5;
+                        // console.log(count)
+                        
+                        // console.log(count)
+                        // console.log(totalLongSegs)
+                        if (count > 0){
+                          moreLink = this.renderMoreLink(row, seg.leftCol + j, [seg].concat(segsBelow), count// count seg as hidden too
+                          );
+                          moreWrap = $('<div/>').append(moreLink);
+                          moreTd.append(moreWrap);
+                          segMoreNodes.push(moreTd[0]);
+                          moreNodes.push(moreTd[0]);
+                          td.addClass('fc-limited').after($(segMoreNodes));
+                          limitedNodes.push(td[0]);
+                        }else{
+                          let emptySeg = '<td rowspan="5"></td>';                        
+                          moreWrap = $('<div/>').append(emptySeg);
+                          moreTd.append(moreWrap);
+                          segMoreNodes.push(moreTd[0]);
+                          moreNodes.push(moreTd[0]);
+                          td.addClass('fc-limited').after($(segMoreNodes)); 
+                          limitedNodes.push(td[0]);
+                        }                        
                       }
                   }
               }
@@ -14399,6 +14468,7 @@ var DayGridEventRenderer = /** @class */ (function (_super) {
                     td = $('<td class="fc-event-container"/>').append(seg.el);
                     if (seg.leftCol !== seg.rightCol) {
                         td.attr('colspan', seg.rightCol - seg.leftCol + 1);
+                        
                     }
                     else {
                         loneCellMatrix[i][col] = td;
