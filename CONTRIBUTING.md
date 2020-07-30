@@ -1,5 +1,5 @@
 
-## Reporting Bugs
+## Reporting Bugs!
 
 Each bug report MUST have a [Codepen/JSFiddle] recreation before any work can begin. [further instructions &raquo;](http://fullcalendar.io/wiki/Reporting-Bugs/)
 
